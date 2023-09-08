@@ -5,3 +5,12 @@ The comments inside the code and model will allow you to start.
 
 The completion of this project would not have been possible without the support of Dr Christopher Clark and Dr Lachlan Jardine, for which I am extremely grateful.
 
+#About me
+👋 Hi, I’m Iga Irena Ratajczak
+
+👀 I'm a 3rd year Aerospace Engineering student at the University of Cambridge, England. In my free time, I lead the Propulsion Team at the Cambridge University Spaceflight Society.
+
+🌱 Comfortable with Python, C++ and Matlab, and hoping to branch out more into machine learning.
+
+📫 How to reach me: Drop me an email for any personal inquiries at iir21@cam.ac.uk
+
