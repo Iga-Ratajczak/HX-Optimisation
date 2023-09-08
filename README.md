@@ -5,7 +5,7 @@ The comments inside the code and model will allow you to start.
 
 The completion of this project would not have been possible without the support of Dr Christopher Clark and Dr Lachlan Jardine, for which I am extremely grateful.
 
-#About me
+About me
 
 👋 Hi, I’m Iga Irena Ratajczak
 
