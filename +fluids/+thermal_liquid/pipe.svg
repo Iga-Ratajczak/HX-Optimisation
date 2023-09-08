@@ -1,0 +1,68 @@
+<!-- Creator: fig2dev Version 3.2.6a -->
+<!-- CreationDate: 2018-04-21 17:52:11 -->
+<!-- Magnification: 1.05 -->
+<svg width="10824" height="7224" xmlns="http://www.w3.org/2000/svg" xmlns:d="http://www.mathworks.com/blockgraphics">
+ <g>
+  <title>Layer 1</title>
+  <!-- Arc -->
+  <path d:options="Port:R0" fill="#000000" fill-opacity="0" id="svg_2" stroke-width="8px" stroke="#000000" d="m9000,-900a1125,1125 0 0 1 0,1800"/>
+  <!-- Arc -->
+  <path d:options="Port:L0" fill="#000000" fill-opacity="0" id="svg_3" stroke-width="8px" stroke="#000000" d="m4500,-900a1125,1125 0 0 1 0,1800"/>
+  <!-- Ellipse -->
+  <ellipse d:options="Port:L0" fill="#000000" fill-opacity="0" id="svg_4" stroke-width="8px" stroke="#000000" ry="900" rx="450" cy="0" cx="1800"/>
+  <!-- Ellipse -->
+  <ellipse d:options="Port:R0" fill="#000000" fill-opacity="0" id="svg_5" stroke-width="8px" stroke="#000000" ry="900" rx="450" cy="0" cx="6300"/>
+  <!-- Line -->
+  <polyline d:options="Port:R0" fill-opacity="0" id="svg_6" stroke-width="8px" stroke="#000000" points=" 9450,0 10800,0"/>
+  <!-- Line -->
+  <polyline d:options="Port:L1" fill-opacity="0" id="svg_7" stroke-width="8px" stroke="#000000" points=" 6075,1800 7650,1800 7650,900"/>
+  <!-- Line -->
+  <rect fill="#000000" fill-opacity="0" id="svg_8" stroke-width="8px" stroke="#ffffff" height="7200" width="10800" y="-3600" x="0"/>
+  <!-- Line -->
+  <polyline d:options="Port:L0" fill-opacity="0" id="svg_9" stroke-width="8px" stroke="#000000" points=" 0,-1800 450,-1800 900,0 1800,0"/>
+  <!-- Line -->
+  <polyline d:options="Port:L0" fill-opacity="0" id="svg_10" stroke-width="8px" stroke="#000000" points=" 1800,-900 4500,-900"/>
+  <!-- Line -->
+  <polyline d:options="Port:R0" fill-opacity="0" id="svg_11" stroke-width="8px" stroke="#000000" points=" 6075,-900 9000,-900"/>
+  <!-- Line -->
+  <polyline d:options="Port:L0" fill-opacity="0" id="svg_12" stroke-width="8px" stroke="#000000" points=" 1800,900 2250,900"/>
+  <!-- Line -->
+  <polyline d:options="Port:L1" fill-opacity="0" id="svg_13" stroke-width="8px" stroke="#000000" points=" 2250,900 4050,900"/>
+  <!-- Line -->
+  <polyline d:options="Port:L0" fill-opacity="0" id="svg_14" stroke-width="8px" stroke="#000000" points=" 4050,900 4500,900"/>
+  <!-- Line -->
+  <polyline d:options="Port:R0" fill-opacity="0" id="svg_15" stroke-width="8px" stroke="#000000" points=" 6075,900 6750,900"/>
+  <!-- Line -->
+  <polyline d:options="Port:L1" fill-opacity="0" id="svg_16" stroke-width="8px" stroke="#000000" points=" 6750,900 8550,900"/>
+  <!-- Line -->
+  <polyline d:options="Port:R0" fill-opacity="0" id="svg_17" stroke-width="8px" stroke="#000000" points=" 8550,900 9000,900"/>
+  <!-- Line -->
+  <polyline d:options="Port:R0" fill-opacity="0" id="svg_18" stroke-width="8px" stroke="#000000" points=" 4725,-900 4950,-900"/>
+  <!-- Line -->
+  <polyline d:options="Port:R0" fill-opacity="0" id="svg_19" stroke-width="8px" stroke="#000000" points=" 5175,-900 5400,-900"/>
+  <!-- Line -->
+  <polyline d:options="Port:R0" fill-opacity="0" id="svg_20" stroke-width="8px" stroke="#000000" points=" 5625,-900 5850,-900"/>
+  <!-- Line -->
+  <polyline d:options="Port:R0" fill-opacity="0" id="svg_21" stroke-width="8px" stroke="#000000" points=" 4725,900 4950,900"/>
+  <!-- Line -->
+  <polyline d:options="Port:R0" fill-opacity="0" id="svg_22" stroke-width="8px" stroke="#000000" points=" 5175,900 5400,900"/>
+  <!-- Line -->
+  <polyline d:options="Port:R0" fill-opacity="0" id="svg_23" stroke-width="8px" stroke="#000000" points=" 5625,900 5850,900"/>
+  <!-- Line -->
+  <polyline d:options="Port:R0" fill-opacity="0" id="svg_24" stroke-width="8px" stroke="#000000" points=" 5175,0 5400,0"/>
+  <!-- Line -->
+  <polyline d:options="Port:R0" fill-opacity="0" id="svg_25" stroke-width="8px" stroke="#000000" points=" 5625,0 5850,0"/>
+  <!-- Line -->
+  <polyline d:options="Port:R0" fill-opacity="0" id="svg_26" stroke-width="8px" stroke="#000000" points=" 6075,0 6300,0"/>
+  <!-- Line -->
+  <polyline d:options="Port:L1" fill-opacity="0" id="svg_27" stroke-width="8px" stroke="#000000" points=" 3150,900 3150,1800"/>
+  <!-- Line -->
+  <polyline d:options="Port:L1" fill-opacity="0" id="svg_28" stroke-width="8px" stroke="#000000" points=" 0,1800 4500,1800"/>
+  <!-- Line -->
+  <polyline d:options="Port:L1" fill-opacity="0" id="svg_29" stroke-width="8px" stroke="#000000" points=" 4725,1800 4950,1800"/>
+  <!-- Line -->
+  <polyline d:options="Port:L1" fill-opacity="0" id="svg_30" stroke-width="8px" stroke="#000000" points=" 5175,1800 5400,1800"/>
+  <!-- Line -->
+  <polyline d:options="Port:L1" fill-opacity="0" id="svg_31" stroke-width="8px" stroke="#000000" points=" 5625,1800 5850,1800"/>
+ </g>
+</svg>

@@ -1,0 +1,408 @@
+
+component (Propagation = blocks) hx_code
+    % Tube in tube heat exchanger (TL TL)
+    %
+    %This component allows sizing of the heat exchanger for desired heat transfer and pressure drop
+    %
+    %This block is a tube in tube Heat exchanger
+    %based on the E-NTU method that models
+    %the heat exchange and pressure loss across both tubes.
+    %The thermal liquid that flows through the larger tube
+    %should be connected to branch 1.
+    %There is no heat exchange with the environment.
+    %Transient effects have been ignored.
+    %Dynamic compressibilitiy has not been included in this version.
+    %
+    %
+    %settings
+    %
+    %Wall thermal dynamics off
+    %
+    %Flow arrangements - counter flow
+    %
+    %Pressure loss parameterization - correlation for tubes
+    %
+    %Heat transfer parameterization - constant heat transfer coefficient
+
+    outputs
+        hx_length_output = {0, 'm'}; % L:bottom
+        hx_radius_inner_output={0, 'm'};% R_inner:bottom
+        hx_radius_outer_output={0, 'm'};% R_outer:bottom
+        heat = { 0.0, 'J/s' }; % H:top
+        dp1_output = {0,'bar'}; %dp1:top
+        dp2_output = {0,'bar'}; %dp2:top
+    end
+
+    nodes
+        A1 = foundation.thermal_liquid.thermal_liquid; % A1:top
+        B1 = foundation.thermal_liquid.thermal_liquid; % B1:top
+        A2 = foundation.thermal_liquid.thermal_liquid; % A2:bottom
+        B2 = foundation.thermal_liquid.thermal_liquid; % B2:bottom
+    end
+
+    parameters   (ExternalAccess = modify)
+        %settings - look at the description
+        RW     = {1.6e-4, 'K/W'}; %Wall thermal resistance
+        Re_L_1 = {2000, '1'}; %Laminar flow upper Reynolds number limit 
+        Re_T_1 = {4000, '1'}; %Turbulent flow lower Reynolds number  limit
+        Re_L_2 = {2000, '1'}; %Laminar flow upper Reynolds number limit 
+        Re_T_2 = {4000, '1'}; %Turbulent flow lower Reynolds number  limit
+        r1            = {15e-6, 'm'}; %Internal surface absolute roughness
+        r2            = {15e-6, 'm'}; %Internal surface absolute roughness
+        lam_friction1 = {64, '1'}; %Laminar friction constant for Darcy friction factor
+        lam_friction2 = {64, '1'}; %Laminar friction constant for Darcy friction factor
+        h1            = {1045, 'W/(m^2)/K'}; %Liquid-wall heat transfer coefficient
+        h2            = {10450, 'W/(m^2)/K'}; %Liquid-wall heat transfer coefficient
+        RF1           = {1e-4, 'K*m^2/W'}; %Fouling factor
+        RF2           = {1e-4, 'K*m^2/W'}; %Fouling factor
+        L_add1         ={0.1, 'm'}; %Aggregate equivalent length of local resistance
+        L_add2         ={0.1, 'm'}; %Aggregate equivalent length of local resistance
+
+        sizingComponent=false; % Design Geometry for desired dp and H
+        sizingforQ=false; %Design Geometry for desired Q and R
+        min_thickness={0.001, 'm'}; %Mininimum thickness of tube
+    end
+
+    %for sizing
+    parameters(ExternalAccess = none)
+        mdot_min = { 0.0001, 'kg/s' };
+        HX_radius_Nom = {0.01, 'm'}; % inner Radius
+        HX_radius_outer_Nom = {0.01, 'm'}; % outer Radius
+        HX_length_Nom     = {5,     'm'  }; % Tube length
+        dp1_Nom={0,'bar'}; %pressure drop Liquid 1
+        dp2_Nom={0,'bar'}; %pressure drop Liquid 2
+        Q_Nom= {-25700, 'W'}; %heat
+    end
+    if sizingComponent
+        annotations
+            %The members are modifiable in the block dialogs and visible in the logs and viewer.
+            Q_Nom: ExternalAccess = modify;
+            dp1_Nom: ExternalAccess = modify;
+            dp2_Nom: ExternalAccess = modify;
+        end
+    else if sizingforQ
+            annotations            
+                %The members are modifiable in the block dialogs and visible in the logs and viewer.
+                Q_Nom: ExternalAccess = modify;
+                HX_radius_Nom: ExternalAccess = modify;
+                HX_radius_outer_Nom: ExternalAccess = modify;
+            end
+        else
+            annotations
+                %The members are modifiable in the block dialogs and visible in the logs and viewer.
+                HX_radius_Nom: ExternalAccess = modify;
+                HX_radius_outer_Nom: ExternalAccess = modify;
+                HX_length_Nom: ExternalAccess = modify;
+            end
+        end
+    end
+    annotations
+        UILayout = [UIGroup("General parameters")
+        UIGroup("Thermal Liquid 1", Re_L_1, Re_T_1,L_add1,r1,lam_friction1,h1,RF1)
+        UIGroup("Thermal Liquid 2",Re_L_2, Re_T_2,L_add2,r2,lam_friction2,h2,RF2)]
+    end
+
+    variables (Access=protected)
+        % Through variables
+        mdot_A1     = { 0.01, 'kg/s' }; % Mass flow branch 1
+        mdot_B1     = { 0.01, 'kg/s' }; % Mass flow branch 2
+        mdot_A2     = { 0.01, 'kg/s' }; % Mass flow branch 1
+        mdot_B2     = { 0.01, 'kg/s' }; % Mass flow branch 2
+
+        Phi_A1     = {0, 'J/s'}; % Heat flow branch 1 port A
+        Phi_A2     = {0, 'J/s'}; % Heat flow branch 2 port A
+        Phi_B1     = {0, 'J/s'}; % Heat flow branch 1 port B
+        Phi_B2     = {0, 'J/s'}; % Heat flow branch 2 port B
+
+        rho_A1     = {1000, 'kg/m^3'}; % Density at port A1
+        rho_A2     = {1000, 'kg/m^3'}; % Density at port A2
+        rho_B1     = {1000, 'kg/m^3'}; % Density at port B1
+        rho_B2     = {1000, 'kg/m^3'}; % Density at port B2
+
+        % Internal nodes
+        u_in_A1       = {85,   'kJ/kg' }; % Specific internal energy at port A1
+        u_in_A2       = {85,   'kJ/kg' }; % Specific internal energy at port A2
+        u_in_B1       = {85,   'kJ/kg' }; % Specific internal energy at port B1
+        u_in_B2       = {85,   'kJ/kg' }; % Specific internal energy at port B2
+
+        Q          = {1000, 'J/s'};
+        HX_length={5,'m'} %Tube length
+        HX_radius = {0.01, 'm'}; % Inner radius
+        HX_radius_outer = {0.01, 'm'}; % Outer radius
+    end
+
+    % For logging
+    intermediates (Access = private)
+        p1 = (A1.p + B1.p)/2; % Pressure of liquid volume
+        p2 = (A2.p + B2.p)/2; % Pressure of liquid volume
+        offset={0.01,'K'}
+    end
+
+    branches
+        mdot_A1     : A1.mdot -> *;
+        mdot_B1     : B1.mdot -> *;
+        mdot_A2     : A2.mdot -> *;
+        mdot_B2     : B2.mdot -> *;
+
+        Phi_A1      : A1.Phi  -> *;
+        Phi_B1      : B1.Phi  -> *;
+        Phi_A2      : A2.Phi  -> *;
+        Phi_B2      : B2.Phi  -> *;
+    end
+
+    equations
+        let
+            % Across variables
+            p_A1 = A1.p;
+            p_A2 = A2.p;
+            p_B1 = B1.p;
+            p_B2 = B2.p;
+
+            % Domain parameters for look up table only
+            T1_TLU         = A1.T_TLU;
+            p1_TLU         = A1.p_TLU;
+            T2_TLU         = A2.T_TLU;
+            p2_TLU         = A2.p_TLU;
+
+            u1_TLU         = A1.u_TLU;
+            u2_TLU         = A2.u_TLU;
+
+            rho1_TLU       = A1.rho_TLU;
+            rho2_TLU       = A2.rho_TLU;
+            cp1_TLU        = A1.cp_TLU;
+            cp2_TLU        = A2.cp_TLU;
+
+            nu1_TLU        = A1.nu_TLU;
+            nu2_TLU        = A2.nu_TLU;
+
+            % Upwind energy scheme
+            k1_cv          = A1.k_cv;
+            k2_cv          = A2.k_cv;
+
+            % Liquid properties table lookup upstream
+            cp1    = tablelookup(T1_TLU, p1_TLU, cp1_TLU,  (A1.T+B1.T)/2, (p_A1+p_B1)/2, interpolation=linear, extrapolation=linear);
+            cp2    = tablelookup(T2_TLU, p2_TLU, cp2_TLU,  (A2.T+B2.T)/2, (p_A2+p_B2)/2, interpolation=linear, extrapolation=linear);
+
+            % Calcul of heat capacity flow (important to avoid 0 flow)
+            C1  =  (abs(mdot_A1) + mdot_min) / abs(abs(mdot_A1) + mdot_min) * (abs(mdot_A1) + mdot_min) * cp1;
+            C2  =  (abs(mdot_A2) + mdot_min) / abs(abs(mdot_A2) + mdot_min) * (abs(mdot_A2) + mdot_min) * cp2;
+
+            % Calcul of the ratio of minimum /maximum
+            Cr = min(C1,C2)/max(C1,C2)
+
+            % Calcul of Number of Transfer Unit
+            %Epsilon set for counter flow tube in tube hx
+            R_overall=1/(h1*SA1)+RF1/SA1+RW+RF2/SA2+1/(h2*SA2)
+
+            NTU=1/(R_overall*min(C1,C2))
+
+            epsilon =if Cr == 1,
+                NTU/(1+NTU)
+            else
+                (1-exp(-NTU*(1-Cr)))/(1-Cr*exp(-NTU*(1-Cr)))
+            end;
+
+            % Kinematic viscosity
+            nu_A1    = tablelookup(T1_TLU, p1_TLU, nu1_TLU,  A1.T, p1, interpolation=linear, extrapolation=linear);
+            nu_A2    = tablelookup(T2_TLU, p2_TLU, nu2_TLU,  A2.T, p2, interpolation=linear, extrapolation=linear);
+
+            % Liquid properties table lookup downstream
+            % Kinematic viscosity
+            nu_B1    = tablelookup(T1_TLU, p1_TLU, nu1_TLU,  B1.T, p1, interpolation=linear, extrapolation=linear);
+            nu_B2    = tablelookup(T2_TLU, p2_TLU, nu2_TLU,  B2.T, p2, interpolation=linear, extrapolation=linear);
+
+            % Maximum component aspect ratio (length/diameter) for thermal conduction
+            max_aspect_ratio_A1 = A1.max_aspect_ratio;
+            max_aspect_ratio_B1 = B1.max_aspect_ratio;
+            max_aspect_ratio_A2 = A2.max_aspect_ratio;
+            max_aspect_ratio_B2 = B2.max_aspect_ratio;
+
+            % Max length for conduction based on the max component aspect ratio
+            max_conduction_length_A1 = max_aspect_ratio_A1 * sqrt(4*Smin1/pi);
+            max_conduction_length_B1 = max_aspect_ratio_B1 * sqrt(4*Smin1/pi);
+            max_conduction_length_A2 = max_aspect_ratio_A2 * sqrt(4*Smin2/pi);
+            max_conduction_length_B2 = max_aspect_ratio_B2 * sqrt(4*Smin2/pi);
+
+            % Thermal conductance coefficient
+            % Approximate conduction using specific internal energy differential
+            % instead of temperature differential
+            G_A1 = ...
+                if le(HX_length/2, max_conduction_length_A1), ...
+                    k1_cv*Smin1/(HX_length/2) ...
+                else ...
+                    k1_cv*Smin1/max_conduction_length_A1 ...
+                end;
+            G_B1 = ...
+                if le(HX_length/2, max_conduction_length_B1), ...
+                    k1_cv*Smin1/(HX_length/2) ...
+                else ...
+                    k1_cv*Smin1/max_conduction_length_B1 ...
+                end;
+
+            G_A2 = ...
+                if le(HX_length/2, max_conduction_length_A2), ...
+                    k2_cv*Smin2/(HX_length/2) ...
+                else ...
+                    k2_cv*Smin2/max_conduction_length_A2 ...
+                end;
+
+            G_B2 = ...
+                if le(HX_length/2, max_conduction_length_B2), ...
+                    k2_cv*Smin2/(HX_length/2) ...
+                else ...
+                    k2_cv*Smin2/max_conduction_length_B2 ...
+                end;
+
+            % Smooth absolute value of mass flow rate for energy flow rate calculations
+            % There can be non-zero energy flow even at zero mass flow due to conduction
+            mdot_abs_A1 = sqrt(mdot_A1^2 + 4*G_A1^2);
+            mdot_abs_B1 = sqrt(mdot_B1^2 + 4*G_B1^2);
+            mdot_abs_A2 = sqrt(mdot_A2^2 + 4*G_A2^2);
+            mdot_abs_B2 = sqrt(mdot_B2^2 + 4*G_B2^2);
+
+            % Flow work
+            pv_A1 = p_A1/rho_A1;
+            pv_B1 = p_B1/rho_B1;
+            pv_A2 = p_A2/rho_A2;
+            pv_B2 = p_B2/rho_B2;
+
+            % Energy flow rate at the node
+            Phi_B1 =mdot_B1*u_in_B1 + mdot_B1*pv_B1;
+            Phi_B2 =mdot_B2*u_in_B2 + mdot_B2*pv_B2;
+
+            %GEOMETRY
+            % Surface area for heat transfer
+            SA2=HX_length*pi*2*HX_radius;
+            SA1=HX_length*pi*2*(HX_radius+min_thickness);
+
+            %outter pipe is connected to branch 1
+            %Hydraulix diameter
+            Dh1=2*(HX_radius_outer-HX_radius);
+            Dh2=2*HX_radius;
+            %Minimum cross section
+            Smin1=pi*HX_radius_outer^2-pi*HX_radius^2
+            Smin2=pi*HX_radius^2;
+
+            %Dynamic viscosity
+            n_A1 = nu_A1*rho_A1;
+            n_A2 = nu_A2*rho_A2;
+            n_B1 = nu_B1*rho_B1;
+            n_B2 = nu_B2*rho_B2;
+
+            %Absolute velocity
+            v_A1=abs(mdot_A1) /rho_A1/Smin1;
+            v_A2=abs(mdot_A2)/rho_A2/Smin2;
+            v_B1=abs(mdot_B1)/rho_B1/Smin1;
+            v_B2=abs(mdot_B2)/rho_B2/Smin2;
+
+            % Reynold number
+            Re_A1=abs(v_A1)*sqrt(4*Smin1/pi)/nu_A1;
+            Re_A2=abs(v_A2)*sqrt(4*Smin2/pi)/nu_A2;
+            Re_B1=abs(v_B1)*sqrt(4*Smin1/pi)/nu_B1;
+            Re_B2=abs(v_B2)*sqrt(4*Smin2/pi)/nu_B2;
+
+            % Darcy friction factor in the half volume adjacent to port
+            ft_A1=(1/(-1.8*log10(6.9/Re_A1+(r1/(3.7*Dh1))^1.11)))^2;
+            ft_A2=(1/(-1.8*log10(6.9/Re_A2+(r2/(3.7*Dh2))^1.11)))^2;
+            ft_B1=(1/(-1.8*log10(6.9/Re_B1+(r1/(3.7*Dh1))^1.11)))^2;
+            ft_B2=(1/(-1.8*log10(6.9/Re_B2+(r2/(3.7*Dh2))^1.11)))^2;
+
+            % Pressure loss calculations - flow reversal prevented
+            delta_p_A1= if Re_A1<=Re_L_1,
+                mdot_A1*n_A1*lam_friction1*(abs(HX_length+L_add1))/(4*Dh1^2*rho_A1*Smin1)
+            else
+                ft_A1*(abs(HX_length+L_add1))/(4*Dh1)*mdot_A1*abs(mdot_A1)/(rho_A1*Smin1*Smin1)
+            end;
+
+            delta_p_A2= if Re_A2<=Re_L_2,
+                mdot_A2*n_A2*lam_friction1*(abs(HX_length+L_add2))/(4*Dh2^2*rho_A2*Smin2)
+            else
+                ft_A2*(abs(HX_length+L_add2))/(4*Dh2)*mdot_A2*abs(mdot_A2)/(rho_A2*Smin2*Smin2)
+            end;
+
+            delta_p_B1= if Re_B1<=Re_L_1,
+                mdot_B1*n_B1*lam_friction1*(abs(HX_length+L_add1))/(4*Dh1^2*rho_B1*Smin1)
+            else
+                ft_B1*(abs(HX_length+L_add1))/(4*Dh1)*mdot_B1*abs(mdot_B1)/(rho_B1*Smin1*Smin1)
+            end;
+
+            delta_p_B2= if Re_B2<=Re_L_2,
+                mdot_B2*n_B2*lam_friction1*(abs(HX_length+L_add2))/(4*Dh2^2*rho_B2*Smin2)
+            else
+                ft_B2*(abs(HX_length+L_add2))/(4*Dh2)*mdot_B2*abs(mdot_B2)/(rho_B2*Smin2*Smin2)
+            end;
+
+
+
+            % Upwind energy scheme
+        in
+            u_in_A1  == tablelookup(T1_TLU, p1_TLU, u1_TLU, A1.T, p_A1, interpolation=linear, extrapolation=linear);
+            u_in_B1  == tablelookup(T1_TLU, p1_TLU, u1_TLU, B1.T, p_B1, interpolation=linear, extrapolation=linear);
+            rho_A1 == tablelookup(T1_TLU, p1_TLU, rho1_TLU, A1.T, p_A1, interpolation=linear, extrapolation=linear);
+            rho_B1 == tablelookup(T1_TLU, p1_TLU, rho1_TLU, B1.T, p_B1, interpolation=linear, extrapolation=linear);
+
+            u_in_A2  == tablelookup(T2_TLU, p2_TLU, u2_TLU, A2.T, p_A2, interpolation=linear, extrapolation=linear);
+            u_in_B2  == tablelookup(T2_TLU, p2_TLU, u2_TLU, B2.T, p_B2, interpolation=linear, extrapolation=linear);
+            rho_A2 == tablelookup(T2_TLU, p2_TLU, rho2_TLU, A2.T, p_A2, interpolation=linear, extrapolation=linear);
+            rho_B2 == tablelookup(T2_TLU, p2_TLU, rho2_TLU, B2.T, p_B2, interpolation=linear, extrapolation=linear);
+
+            % Mass balance equation
+            mdot_A1 + mdot_B1 == 0;
+            mdot_A2 + mdot_B2 == 0;
+
+            % Pressure loss equation for each fluid
+            p_A1-p_B1==delta_p_A1-delta_p_B1;
+            p_A2-p_B2==delta_p_A2-delta_p_B2;
+
+            % Energy balance equation for each fluid
+            Phi_A1 ==mdot_A1*u_in_A1 + mdot_A1*pv_A1;
+            Phi_A2 ==mdot_A2*u_in_A2 + mdot_A2*pv_A2;
+
+            Phi_A1 + Phi_B1 == Q
+            Phi_A2 + Phi_B2 == -Q
+
+            Q  == epsilon * min(C1,C2) * (A1.T-A2.T);
+
+            % Outputs
+            heat == Q;
+            dp1_output==p_A1-p_B1;
+            dp2_output==p_A2-p_B2;
+            hx_length_output==HX_length;
+            hx_radius_inner_output==HX_radius;
+            hx_radius_outer_output==HX_radius_outer;
+        end
+    end
+
+       
+    %equations needed for sizing
+    if sizingComponent
+        equations
+            let
+                % Across variables
+                p_A1 = A1.p;
+                p_A2 = A2.p;
+                p_B1 = B1.p;
+                p_B2 = B2.p;
+            in
+                Q==Q_Nom;
+                dp1_Nom==p_A1-p_B1;
+                dp2_Nom==p_A2-p_B2;
+                assert (HX_radius_outer>HX_radius+min_thickness, 'SIZING ERROR: it is impossible to find a pair of radiuses that can satisfy the desired conditions ')
+            end
+        end
+    else if sizingforQ
+            equations
+                HX_radius_Nom ==HX_radius;
+                HX_radius_outer_Nom ==HX_radius_outer;
+                Q==Q_Nom;
+            end
+        else
+            equations
+                HX_radius_Nom ==HX_radius;
+                HX_radius_outer_Nom ==HX_radius_outer;
+                HX_length_Nom==HX_length;
+
+            end
+        end
+    end
+end
