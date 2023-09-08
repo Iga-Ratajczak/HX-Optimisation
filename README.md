@@ -3,7 +3,7 @@ This project showcases my work done for a summer internship sponsored by MathWor
 
 It includes a modified heat exchanger and pipe block which find the geometry of the components for desired performance parameters. A multiobjective optimizer was then implemented to find tradeoffs and streamline the design process.
 
-The comments inside the code and model will allow you to start.
+Start by opening the 'pipe_and_hx.slx' model. The comments and descriptions inside the code and model will allow you to navigate.
 
 The completion of this project would not have been possible without the support of Dr Christopher Clark and Dr Lachlan Jardine, for which I am extremely grateful.
 
